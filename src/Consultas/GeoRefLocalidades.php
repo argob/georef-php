@@ -9,6 +9,7 @@ use Argob\GeoRef\Responses\GeoRefResponse;
 use \GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use \Illuminate\Support\Facades\Cache;
+use Psr\Http\Message\ResponseInterface;
 
 class GeoRefLocalidades implements APIGatewayConsulta
 {
@@ -18,7 +19,7 @@ class GeoRefLocalidades implements APIGatewayConsulta
         $this->authenticator = $authenticator;
     }
     
-    protected function authenticator()
+    protected function authenticator(): APIGatewayAuthenticator
     {
         return $this->authenticator;
     }
@@ -28,79 +29,85 @@ class GeoRefLocalidades implements APIGatewayConsulta
         return env('GEOREF_LOCALIDADES_ENDPOINT');
     }
     
-    public function consultar(): APIGatewayResponse
+    public function consultar(array $values = []): APIGatewayResponse
     {
         
         try {
-    
+            
             $client = new Client([
                 'timeout'  => 2.0,
             ]);
-    
-            $res = $client->request('GET', $this->endpoint(), [
-        
+            
+            $response = $client->request('GET', $this->endpoint(), [
+                
                 'query' => [
                     'orden' => 'nombre',
+//                    'provincia' => $values['provincia'],
+                    'limit' => $values['limit'],
                 ],
-    
+                
                 'headers'  => [
-                    'Authorization' => 'Bearer ' . $this->authenticator->getToken()->token(),
+                    'Authorization' => 'Bearer ' . $this->authenticator()->getToken()->token(),
                 ]
-    
+            
             ]);
             
-            $response = $this->handleResponse($res);
             
-        } catch (ClientException $request) {
+        } catch (ClientException $exception) {
             
-            $response = $this->handleError($request);
+            /**
+             * TODO: Loguear mensaje y/o más datos de la exception
+             */
+            
+            $response = $exception->getResponse();
             
         }
         
-        return $response;
+        return $this->handleResponse($response);
         
     }
     
-    protected function handleResponse($response)
+    protected function handleResponse(ResponseInterface $response): APIGatewayResponse
     {
         $code = $response->getStatusCode();
         
         $results = null;
         
+        $localidades = [];
+        
         if ($code == 200) {
-    
+            
             $data = json_decode($response->getBody()->getContents());
             
-            $res = new GeoRefResponse();
-            
-            $res->setMetadata(
+            foreach ($data->results as $result) {
                 
+                $localidades[$result->id] = $result;
+                
+            }
+            
+            $res = new GeoRefResponse(
+    
+                $localidades,
                 [
                     'resultset' => $data->metadata->resultset
                 ]
+            
             );
             
-            $res->setItems($data->results);
-            
-            Cache::put('georef_data_localidades', $res);
+            Cache::put('georef_data_localidades', $localidades, 3600);
             
         }
-    
-        return $res;
-    }
-    
-    protected function handleError(ClientException $error)
-    {
-       
-        $code = $error->getCode();
         
-        if($code == 401) {
+        
+        if ($code == 401) {
             
             $this->authenticator->refreshToken();
             
-            $this->consultar();
+            $res = $this->consultar();
             
         }
+        
+        return $res;
     }
     
 }
