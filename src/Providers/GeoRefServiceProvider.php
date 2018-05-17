@@ -38,7 +38,7 @@ class GeoRefServiceProvider extends ServiceProvider
                 $app->make(ClientInterface::class)
         
             );
-        })
+        });
     
     }
 }
