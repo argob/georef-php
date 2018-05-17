@@ -2,7 +2,9 @@
 
 
 namespace Argob\GeoRef\Providers;
-use Argob\APIGateway\Authenticators\JWTAuthenticator;
+use Argob\APIGateway\Authenticators\APIGatewayAuthenticator;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Support\ServiceProvider;
 use Argob\GeoRef\Consultas\GeoRefProvincias;
 
@@ -16,20 +18,27 @@ class GeoRefServiceProvider extends ServiceProvider
     public function register()
     {
         
-        $authenticator = new JWTAuthenticator(
-            env('API_GATEWAY_USERNAME', null),
-            env('API_GATEWAY_PASSWORD', null),
-            env('API_GATEWAY_HOST', null)
-        );
+        $this->app->bind(ClientInterface::class, Client::class);
     
-//        $this->app->singleton('Argob\GeoRef\GeoRefProvincias', function ($app) {
-//
-//            return new GeoRefProvincias(
-//
-//                app(JWTAuthenticator::class)
-//
-//            );
-//        });
+        $this->app->bind('GeoRefProvincias', function ($app) {
+
+            return new GeoRefProvincias(
+
+                $app->make(APIGatewayAuthenticator::class),
+                $app->make(ClientInterface::class)
+
+            );
+        });
+    
+        $this->app->bind('GeoRefLocalidades', function ($app) {
+        
+            return new GeoRefLocalidades(
+            
+                $app->make(APIGatewayAuthenticator::class),
+                $app->make(ClientInterface::class)
+        
+            );
+        })
     
     }
 }
