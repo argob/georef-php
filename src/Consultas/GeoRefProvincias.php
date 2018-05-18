@@ -6,17 +6,20 @@ use Argob\APIGateway\Authenticators\APIGatewayAuthenticator;
 use Argob\APIGateway\Consultas\APIGatewayConsulta;
 use Argob\APIGateway\Responses\APIGatewayResponse;
 use Argob\GeoRef\Responses\GeoRefResponse;
-use \GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use \Illuminate\Support\Facades\Cache;
 use Psr\Http\Message\ResponseInterface;
 
 class GeoRefProvincias implements APIGatewayConsulta
 {
+    protected $authenticator;
+    protected $client;
     
-    public function __construct(APIGatewayAuthenticator $authenticator)
+    public function __construct(APIGatewayAuthenticator $authenticator, ClientInterface $client)
     {
         $this->authenticator = $authenticator;
+        $this->client = $client;
     }
     
     protected function authenticator(): APIGatewayAuthenticator
@@ -33,12 +36,8 @@ class GeoRefProvincias implements APIGatewayConsulta
     {
         
         try {
-    
-            $client = new Client([
-                'timeout'  => 2.0,
-            ]);
-    
-            $response = $client->request('GET', $this->endpoint(), [
+            
+            $response = $this->client->request('GET', $this->endpoint(), [
         
                 'query' => [
                     'orden' => 'nombre',

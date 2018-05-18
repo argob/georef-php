@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\ServiceProvider;
 use Argob\GeoRef\Consultas\GeoRefProvincias;
+use Argob\GeoRef\Consultas\GeoRefLocalidades;
 
 class GeoRefServiceProvider extends ServiceProvider
 {
