@@ -11,7 +11,7 @@ use GuzzleHttp\Exception\ClientException;
 use \Illuminate\Support\Facades\Cache;
 use Psr\Http\Message\ResponseInterface;
 
-class GeoRefProvincias implements APIGatewayConsulta
+class GeoRefProvinciasService implements APIGatewayConsulta
 {
     protected $authenticator;
     protected $client;

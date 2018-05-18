@@ -6,8 +6,8 @@ use Argob\APIGateway\Authenticators\APIGatewayAuthenticator;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\ServiceProvider;
-use Argob\GeoRef\Consultas\GeoRefProvincias;
-use Argob\GeoRef\Consultas\GeoRefLocalidades;
+use Argob\GeoRef\Consultas\GeoRefProvinciasService;
+use Argob\GeoRef\Consultas\GeoRefLocalidadesService;
 
 class GeoRefServiceProvider extends ServiceProvider
 {
@@ -21,9 +21,9 @@ class GeoRefServiceProvider extends ServiceProvider
         
         $this->app->bind(ClientInterface::class, Client::class);
     
-        $this->app->bind('GeoRefProvincias', function ($app) {
+        $this->app->bind('GeoRefProvinciasService', function ($app) {
 
-            return new GeoRefProvincias(
+            return new GeoRefProvinciasService(
 
                 $app->make(APIGatewayAuthenticator::class),
                 $app->make(ClientInterface::class)
@@ -31,9 +31,9 @@ class GeoRefServiceProvider extends ServiceProvider
             );
         });
     
-        $this->app->bind('GeoRefLocalidades', function ($app) {
+        $this->app->bind('GeoRefLocalidadesService', function ($app) {
         
-            return new GeoRefLocalidades(
+            return new GeoRefLocalidadesService(
             
                 $app->make(APIGatewayAuthenticator::class),
                 $app->make(ClientInterface::class)
